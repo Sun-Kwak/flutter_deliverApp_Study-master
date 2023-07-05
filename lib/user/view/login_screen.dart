@@ -27,8 +27,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final dio = Dio();
 
-
-
     return DefaultLayout(
       child: SafeArea(
         top: true,

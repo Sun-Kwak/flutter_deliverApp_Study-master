@@ -1,4 +1,5 @@
 import 'package:flutter_deliverlyapp_test/common/const/data.dart';
+import 'package:flutter_deliverlyapp_test/common/model/model_with_id.dart';
 import 'package:flutter_deliverlyapp_test/common/utils/data_utils.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -10,7 +11,7 @@ enum RestaurantPriceRange {
   cheap,
 }
 @JsonSerializable()
-class RestaurantModel {
+class RestaurantModel implements IModelWithId{
   final String id;
   final String name;
   @JsonKey(
@@ -41,22 +42,4 @@ class RestaurantModel {
 
   Map<String, dynamic> toJson() => _$RestaurantModelToJson(this);
 
-
-  // factory RestaurantModel.fromJson({
-  //   required Map<String, dynamic> json,
-  // }){
-  //   return RestaurantModel(
-  //     deliveryFee: json['deliveryFee'],
-  //     deliveryTime: json['deliveryTime'],
-  //     name: json['name'],
-  //     id: json['id'],
-  //     priceRange: RestaurantPriceRange.values.firstWhere(
-  //           (e) => e.name == json['priceRange'],
-  //     ),
-  //     ratings: json['ratings'],
-  //     ratingsCount: json['ratingsCount'],
-  //     tags: List<String>.from(json['tags']),
-  //     thumbUrl: 'http://$ip${json['thumbUrl']}',
-  //   );
-  // }
 }
