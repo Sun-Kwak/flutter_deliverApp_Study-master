@@ -1,32 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_deliverlyapp_test/common/component/pagination_list_view.dart';
-import 'package:flutter_deliverlyapp_test/restaurant/component/restaurant_card.dart';
-import 'package:flutter_deliverlyapp_test/restaurant/provider/restaurant_provider.dart';
+import 'package:flutter_deliverlyapp_test/product/component/product_card.dart';
+import 'package:flutter_deliverlyapp_test/product/model/product_model.dart';
+import 'package:flutter_deliverlyapp_test/product/provider/product_provider.dart';
 import 'package:flutter_deliverlyapp_test/restaurant/view/restaurant_detail_screen.dart';
 import 'package:go_router/go_router.dart';
 
-class RestaurantScreen extends StatelessWidget {
-  const RestaurantScreen({super.key});
+class ProductScreen extends StatelessWidget {
+  const ProductScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return PaginationListView(
-      itemBuilder: <RestaurantModel>(_, index, model) {
+    return PaginationListView<ProductModel>(
+      itemBuilder: <ProductModel>(_, index, model) {
         return GestureDetector(
           onTap: () {
             context.goNamed(
               RestaurantDetailScreen.routeName,
               pathParameters: {
-                'rid': model.id,
+                'rid': model.restaurant.id,
               },
             );
           },
-          child: RestaurantCard.fromModel(
+          child: ProductCard.fromProductModel(
             model: model,
           ),
         );
       },
-      provider: restaurantProvider,
+      provider: productProvider,
     );
   }
 }

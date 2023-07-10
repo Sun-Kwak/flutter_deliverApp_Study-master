@@ -1,11 +1,14 @@
+import 'package:badges/badges.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Badge;
+import 'package:flutter_deliverlyapp_test/common/const/colors.dart';
 import 'package:flutter_deliverlyapp_test/common/const/data.dart';
 import 'package:flutter_deliverlyapp_test/common/dio/dio.dart';
 import 'package:flutter_deliverlyapp_test/common/layout/default_layout.dart';
 import 'package:flutter_deliverlyapp_test/common/model/cursor_pagination_model.dart';
 import 'package:flutter_deliverlyapp_test/common/utils/pagination_utils.dart';
 import 'package:flutter_deliverlyapp_test/product/component/product_card.dart';
+import 'package:flutter_deliverlyapp_test/product/model/product_model.dart';
 import 'package:flutter_deliverlyapp_test/rating/component/rating_card.dart';
 import 'package:flutter_deliverlyapp_test/rating/model/rating_model.dart';
 import 'package:flutter_deliverlyapp_test/restaurant/component/restaurant_card.dart';
@@ -15,10 +18,15 @@ import 'package:flutter_deliverlyapp_test/restaurant/provider/restaurant_provide
 import 'package:flutter_deliverlyapp_test/restaurant/provider/restaurant_rating_provider.dart';
 import 'package:flutter_deliverlyapp_test/restaurant/repository/restaurant_rating_repository.dart';
 import 'package:flutter_deliverlyapp_test/restaurant/repository/restaurant_repository.dart';
+import 'package:flutter_deliverlyapp_test/restaurant/view/basket_screen.dart';
+import 'package:flutter_deliverlyapp_test/user/provider/basket_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:skeletons/skeletons.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
+  static String get routeName => 'restaruantDetail';
+
   final String id;
 
   const RestaurantDetailScreen({required this.id, super.key});
@@ -42,11 +50,12 @@ class _RestaurantDetailScreenState
     controller.addListener(listener);
   }
 
-  void listener(){
+  void listener() {
     PaginationUtils.paginate(
-        controller: controller,
-        provider: ref.read(restaurantRatingProvider(widget.id).notifier,
-        ),
+      controller: controller,
+      provider: ref.read(
+        restaurantRatingProvider(widget.id).notifier,
+      ),
     );
   }
 
@@ -54,6 +63,7 @@ class _RestaurantDetailScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(restaurantDetailProvider(widget.id));
     final ratingsState = ref.watch(restaurantRatingProvider(widget.id));
+    final basket = ref.watch(basketProvider);
 
     if (state == null) {
       return DefaultLayout(
@@ -64,6 +74,30 @@ class _RestaurantDetailScreenState
     }
 
     return DefaultLayout(
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          context.pushNamed(BasketScreen.routeName);
+        },
+        backgroundColor: PRIMARY_COLOR,
+        child: Badge(
+          showBadge: basket.isNotEmpty,
+          badgeContent: Text(
+            basket.fold<int>(
+              0,
+                  (previous, next) => previous + next.count,
+            ).toString(),
+            style: TextStyle(
+              color: PRIMARY_COLOR,
+            ),
+          ),
+          badgeStyle: BadgeStyle(
+            badgeColor: Colors.white,
+          ),
+          child: Icon(
+            Icons.shopping_basket_outlined
+          ),
+        ),
+      ),
       title: state.name,
       child: CustomScrollView(
         controller: controller,
@@ -75,6 +109,7 @@ class _RestaurantDetailScreenState
           if (state is RestaurantDetailModel) renderLabel(),
           if (state is RestaurantDetailModel)
             renderProducts(
+              restaurant: state,
               products: state.products,
             ),
           if (ratingsState is CursorPagination<RatingModel>)
@@ -111,7 +146,6 @@ class _RestaurantDetailScreenState
     );
   }
 
-
   SliverPadding renderLabel() {
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 16),
@@ -128,6 +162,7 @@ class _RestaurantDetailScreenState
   }
 
   SliverPadding renderProducts({
+    required RestaurantModel restaurant,
     required List<RestaurantProductModel> products,
   }) {
     return SliverPadding(
@@ -136,10 +171,24 @@ class _RestaurantDetailScreenState
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final model = products[index];
-            return Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: ProductCard.fromMode(
-                model: model,
+            return InkWell(
+              onTap: () {
+                ref.read(basketProvider.notifier).addToBasket(
+                      product: ProductModel(
+                        detail: model.detail,
+                        id: model.id,
+                        imgUrl: model.imgUrl,
+                        name: model.name,
+                        price: model.price,
+                        restaurant: restaurant,
+                      ),
+                    );
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: ProductCard.fromRestaurantProductModel(
+                  model: model,
+                ),
               ),
             );
           },
@@ -148,6 +197,7 @@ class _RestaurantDetailScreenState
       ),
     );
   }
+
   SliverPadding renderRatings({
     required List<RatingModel> models,
   }) {
@@ -155,7 +205,7 @@ class _RestaurantDetailScreenState
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-              (_, index) => Padding(
+          (_, index) => Padding(
             padding: const EdgeInsets.only(bottom: 16.0),
             child: RatingCard.fromModel(
               model: models[index],
@@ -166,7 +216,6 @@ class _RestaurantDetailScreenState
       ),
     );
   }
-
 
   SliverToBoxAdapter renderTop({
     required RestaurantModel model,

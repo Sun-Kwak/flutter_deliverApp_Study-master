@@ -8,10 +8,14 @@ import 'package:flutter_deliverlyapp_test/common/const/data.dart';
 import 'package:flutter_deliverlyapp_test/common/layout/default_layout.dart';
 import 'package:flutter_deliverlyapp_test/common/secure_storage/secure_storage.dart';
 import 'package:flutter_deliverlyapp_test/common/view/root_tab.dart';
+import 'package:flutter_deliverlyapp_test/user/model/user_model.dart';
+import 'package:flutter_deliverlyapp_test/user/provider/user_me_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
 class LoginScreen extends ConsumerStatefulWidget {
+  static String get routeName => 'login';
+
   const LoginScreen({super.key});
 
   @override
@@ -19,13 +23,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  String userName = '';
+  String username = '';
   String password = '';
 
   @override
   Widget build(BuildContext context) {
-
-    final dio = Dio();
+    final state = ref.watch(userMeProvider);
 
     return DefaultLayout(
       child: SafeArea(
@@ -48,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16.0,),
                 CustomTextFormField(
                   onChanged: (String value) {
-                    userName = value;
+                    username = value;
                   },
                   hintText: '이메일 입력',
                   //errorText: '에러 발생',
@@ -64,33 +67,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16.0,),
                 ElevatedButton(
-                  onPressed: () async {
-                    final rawString = '$userName:$password';
-
-                    Codec<String, String> StringToBase64 = utf8.fuse(base64);
-
-                    String token = StringToBase64.encode(rawString);
-
-                    final resp = await dio.post(
-                     'http://$ip/auth/login',
-                      options: Options(
-                        headers: {
-                          'authorization': 'Basic $token',
-                        }
-                      ),
+                  onPressed: state is UserModelLoading ?
+                    null
+                    : () async {
+                    ref.read(userMeProvider.notifier).login(
+                        username: username,
+                        password: password,
                     );
-
-                    final refreshToken = resp.data['refreshToken'];
-                    final accessToken = resp.data['accessToken'];
-
-                    final storage = ref.read(secureStorageProvider);
-
-                    await storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
-                    await storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
-
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_)=> RootTab(), ),
-                    );
+                    // final rawString = '$userName:$password';
+                    //
+                    // Codec<String, String> StringToBase64 = utf8.fuse(base64);
+                    //
+                    // String token = StringToBase64.encode(rawString);
+                    //
+                    // final resp = await dio.post(
+                    //  'http://$ip/auth/login',
+                    //   options: Options(
+                    //     headers: {
+                    //       'authorization': 'Basic $token',
+                    //     }
+                    //   ),
+                    // );
+                    //
+                    // final refreshToken = resp.data['refreshToken'];
+                    // final accessToken = resp.data['accessToken'];
+                    //
+                    // final storage = ref.read(secureStorageProvider);
+                    //
+                    // await storage.write(key: REFRESH_TOKEN_KEY, value: refreshToken);
+                    // await storage.write(key: ACCESS_TOKEN_KEY, value: accessToken);
+                    //
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(builder: (_)=> RootTab(), ),
+                    // );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: PRIMARY_COLOR,

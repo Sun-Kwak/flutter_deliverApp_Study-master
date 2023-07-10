@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_deliverlyapp_test/common/const/colors.dart';
 import 'package:flutter_deliverlyapp_test/common/layout/default_layout.dart';
+import 'package:flutter_deliverlyapp_test/order/view/order_screen.dart';
+import 'package:flutter_deliverlyapp_test/product/view/product_screen.dart';
 import 'package:flutter_deliverlyapp_test/restaurant/view/restaurant_screen.dart';
+import 'package:flutter_deliverlyapp_test/user/view/profile_screen.dart';
 
 class RootTab extends StatefulWidget {
+  static String get routeName => 'home';
   const RootTab({super.key});
 
   @override
@@ -46,9 +50,9 @@ class _RootTabState extends State<RootTab>
         controller: controller,
         children: [
           RestaurantScreen(),
-          Center(child: Container(child: Text('음식'),)),
-          Center(child: Container(child: Text('주문'),)),
-          Center(child: Container(child: Text('프로필'),)),
+          ProductScreen(),
+          OrderScreen(),
+          ProfileScreen(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
